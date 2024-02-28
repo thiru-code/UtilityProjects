@@ -1,0 +1,47 @@
+Sub SplitDataIntoFiles()
+    Dim ws As Worksheet
+    Dim pt As PivotTable
+    Dim pf As PivotField
+    Dim pi As PivotItem
+    Dim rngData As Range
+    Dim wsNew As Worksheet
+    Dim filename As String
+    
+    ' Set the worksheet with your data
+    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
+    
+    ' Create a PivotTable on a new sheet
+    Set wsNew = ThisWorkbook.Sheets.Add
+    wsNew.Name = "PivotTableSheet"
+    Set rngData = ws.UsedRange
+    Set pt = ThisWorkbook.PivotTableWizard(SourceType:=xlDatabase, SourceData:=rngData, TableDestination:=wsNew.Range("A1"), TableName:="PivotTable")
+    
+    ' Set the filename column as the row field in the PivotTable
+    Set pf = pt.PivotFields("filename") ' Change "filename" to your filename column header
+    pf.Orientation = xlRowField
+    
+    ' Loop through each filename in the PivotTable
+    For Each pi In pf.PivotItems
+        ' Filter by the current filename
+        pf.ClearAllFilters
+        pi.Visible = True
+        
+        ' Copy visible data to a new sheet
+        wsNew.Cells.Copy
+        Set wsNew = ThisWorkbook.Sheets.Add
+        wsNew.Name = pi.Name
+        wsNew.Range("A1").PasteSpecial Paste:=xlPasteValues
+        Application.CutCopyMode = False
+        
+        ' Save the new sheet as an individual Excel file
+        filename = "Path\To\Save\Location\" & pi.Name & ".xlsx" ' Change "Path\To\Save\Location\" to your desired save location
+        wsNew.Copy
+        ActiveWorkbook.SaveAs filename
+        ActiveWorkbook.Close
+    Next pi
+    
+    ' Clean up: delete the PivotTable sheet
+    Application.DisplayAlerts = False
+    wsNew.Delete
+    Application.DisplayAlerts = True
+End Sub
