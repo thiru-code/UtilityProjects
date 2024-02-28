@@ -1,0 +1,54 @@
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ExcelSplitter {
+
+    public static void main(String[] args) {
+        String inputFile = "master.xlsx";
+        try (FileInputStream fis = new FileInputStream(inputFile);
+             Workbook workbook = new XSSFWorkbook(fis)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            Map<String, Workbook> fileMap = new HashMap<>();
+
+            for (Row row : sheet) {
+                Cell filenameCell = row.getCell(0); // Assuming filename is in the first column
+                if (filenameCell != null) {
+                    String filename = filenameCell.getStringCellValue();
+                    Workbook fileWorkbook = fileMap.getOrDefault(filename, new XSSFWorkbook());
+                    Sheet fileSheet = fileWorkbook.createSheet();
+                    Row fileRow = fileSheet.createRow(fileSheet.getLastRowNum() + 1);
+
+                    // Copy row data to the new file
+                    for (int i = 0; i < row.getLastCellNum(); i++) {
+                        Cell cell = row.getCell(i);
+                        if (cell != null) {
+                            Cell newCell = fileRow.createCell(i);
+                            newCell.setCellValue(cell.getStringCellValue());
+                        }
+                    }
+                    fileMap.put(filename, fileWorkbook);
+                }
+            }
+
+            // Write each file to disk
+            for (Map.Entry<String, Workbook> entry : fileMap.entrySet()) {
+                String filename = entry.getKey();
+                Workbook fileWorkbook = entry.getValue();
+                try (FileOutputStream fos = new FileOutputStream(filename + ".xlsx")) {
+                    fileWorkbook.write(fos);
+                }
+            }
+
+            System.out.println("Files created successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
