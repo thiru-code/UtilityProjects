@@ -1,0 +1,28 @@
+var flowFile = session.get();
+if (flowFile != null) {
+    var content = flowFile.getContent();
+    var json = JSON.parse(content);
+
+    // Modify data recursively
+    function modifyData(data) {
+        if (typeof data === 'string') {
+            return data.replace(/,/g, "**CUSTOM_STRING**"); // Replace commas with "**CUSTOM_STRING**"
+        } else if (typeof data === 'object') {
+            for (var key in data) {
+                if (data.hasOwnProperty(key)) {
+                    data[key] = modifyData(data[key]);
+                }
+            }
+        }
+        return data;
+    }
+
+    json = modifyData(json);
+
+    // Update content with modified JSON
+    flowFile = session.write(flowFile, function(outputStream) {
+        outputStream.write(JSON.stringify(json));
+    });
+
+    session.transfer(flowFile, REL_SUCCESS);
+}
