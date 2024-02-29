@@ -1,0 +1,25 @@
+Sub SplitDataByFilename()
+    Dim ws As Worksheet
+    Dim newWB As Workbook
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Assuming your data starts from row 2 and filename column is column A
+    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
+    
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    For i = 2 To lastRow
+        ' Create a new workbook for each unique filename
+        If Not FileExists(ws.Cells(i, 1).Value) Then
+            Set newWB = Workbooks.Add
+            newWB.SaveAs ws.Cells(i, 1).Value & ".xlsx" ' Save with filename.xlsx
+        End If
+        ' Copy the row to the corresponding workbook
+        ws.Rows(i).Copy newWB.Sheets(1).Rows(newWB.Sheets(1).Cells(Rows.Count, "A").End(xlUp).Row + 1)
+    Next i
+End Sub
+
+Function FileExists(filepath As String) As Boolean
+    FileExists = Dir(filepath & ".xlsx") <> ""
+End Function
