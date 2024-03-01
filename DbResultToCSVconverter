@@ -1,0 +1,52 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class ResultSetToCSV {
+
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/your_database_name";
+        String user = "your_username";
+        String password = "your_password";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM your_table_name")) {
+
+            FileWriter csvWriter = new FileWriter("output.csv");
+
+            int columnCount = rs.getMetaData().getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                csvWriter.append(rs.getMetaData().getColumnName(i));
+                if (i < columnCount) {
+                    csvWriter.append(",");
+                } else {
+                    csvWriter.append("\n");
+                }
+            }
+
+            while (rs.next()) {
+                for (int i = 1; i <= columnCount; i++) {
+                    csvWriter.append(rs.getString(i));
+                    if (i < columnCount) {
+                        csvWriter.append(",");
+                    } else {
+                        csvWriter.append("\n");
+                    }
+                }
+            }
+
+            csvWriter.flush();
+            csvWriter.close();
+
+            System.out.println("CSV file has been created successfully.");
+
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
