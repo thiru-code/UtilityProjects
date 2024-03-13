@@ -1,0 +1,30 @@
+import org.apache.poi.ss.usermodel.*;
+
+import java.io.*;
+
+public class ExcelFilterAndSort {
+    public static void main(String[] args) {
+        try {
+            FileInputStream inputStream = new FileInputStream("example.xlsx");
+            Workbook workbook = WorkbookFactory.create(inputStream);
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Add header filters
+            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, sheet.getRow(0).getLastCellNum() - 1));
+
+            // Sort data based on column 0 (first column) in ascending order
+            DataSorter sorter = new DataSorter(sheet);
+            sorter.sortColumn(0, true);
+
+            // Write changes back to Excel file
+            FileOutputStream outputStream = new FileOutputStream("example_sorted.xlsx");
+            workbook.write(outputStream);
+            workbook.close();
+            outputStream.close();
+
+            System.out.println("Excel file filtered and sorted successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
