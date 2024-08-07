@@ -1,0 +1,44 @@
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEObject;
+import com.nimbusds.jose.crypto.RSADecrypter;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jwt.SignedJWT;
+
+import java.text.ParseException;
+
+public class JWEDecryptor {
+
+    public static void main(String[] args) {
+        try {
+            // Replace these strings with your actual JWK and encrypted data
+            String jwkString = "{YOUR_JWK_STRING}";
+            String encryptedData = "{YOUR_ENCRYPTED_DATA}";
+
+            // Parse the JWK
+            JWKSet jwkSet = JWKSet.parse(jwkString);
+            JWK jwk = jwkSet.getKeys().get(0); // Assuming the key you need is the first one
+
+            // Parse the encrypted JWT
+            JWEObject jweObject = JWEObject.parse(encryptedData);
+
+            // Decrypt the JWE
+            RSADecrypter decrypter = new RSADecrypter(jwk.toRSAKey());
+            jweObject.decrypt(decrypter);
+
+            // Get the payload, which is the signed JWT
+            SignedJWT signedJWT = jweObject.getPayload().toSignedJWT();
+
+            // Print the JWT claims (payload)
+            if (signedJWT != null) {
+                System.out.println("JWT: " + signedJWT.serialize());
+                System.out.println("Claims: " + signedJWT.getJWTClaimsSet().toJSONObject());
+            } else {
+                System.out.println("The decrypted payload is not a signed JWT.");
+            }
+
+        } catch (ParseException | JOSEException e) {
+            e.printStackTrace();
+        }
+    }
+}
